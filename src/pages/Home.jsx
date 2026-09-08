@@ -1,21 +1,62 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MovieCard from "../components/MovieCard";
+import { getPopularMovies, searchMovies } from "../services/api";
 import "../css/Home.css";
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [movies, setMovies] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const movies = [
-    { id: 1, title: "John Wick", release_date: "2020" },
-    { id: 2, title: "Terminator", release_date: "1999" },
-    { id: 3, title: "Matrix", release_date: "1998" },
-  ];
+  useEffect(() => {
+    const fetchPopularMovies = async () => {
+      try {
+        setLoading(false);
+        const popularMovies = await getPopularMovies();
+        setMovies(popularMovies);
+      } catch (error) {
+        setLoading(false);
+        setError(error);
+        console.error("Error fetching popular movies:", error);
+      } finally {
+        setLoading(false);
+        console.log("Popular movies fetched successfully.");
+      }
+    };
+    fetchPopularMovies();
+  }, []);
 
-  const handleSearch = (event) => {
+  // const movies = [
+  //   { id: 1, title: "John Wick", release_date: "2020" },
+  //   { id: 2, title: "Terminator", release_date: "1999" },
+  //   { id: 3, title: "Matrix", release_date: "1998" },
+  // ];
+
+  const handleSearch = async (event) => {
     event.preventDefault();
-    const searchTerm = event.target.elements.search.value;
-    setSearchQuery(searchTerm);
-    console.log(`Searching for: ${searchTerm}`);
+    if (!searchQuery.trim()) {
+      alert("Please enter a search term.");
+      return;
+    }
+
+    if (loading) return;
+    setLoading(true);
+
+    try {
+      const searchResults = await searchMovies(searchQuery);
+      setMovies(searchResults);
+      setError(null);
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+      setError("Error searching for movies. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+
+    setSearchQuery("");
+    console.log(`Searching for: ${searchQuery}`);
   };
 
   return (
@@ -34,11 +75,17 @@ const Home = () => {
         </button>
       </form>
       <div className="movies-grid">
-        {movies.map(
-          (movie) =>
-            movie.title.toLowerCase().includes(searchQuery.toLowerCase()) && (
-              <MovieCard key={movie.id} movie={movie} />
-            ),
+        {error && <div className="error">Error: {error.message}</div>}
+
+        {loading ? (
+          <div className="loading">Loading...</div>
+        ) : (
+          movies.map(
+            (movie) =>
+              movie.title.toLowerCase().includes(searchQuery.toLowerCase()) && (
+                <MovieCard key={movie.id} movie={movie} />
+              ),
+          )
         )}
       </div>
     </div>
