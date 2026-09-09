@@ -74,20 +74,19 @@ const Home = () => {
           Search
         </button>
       </form>
-      <div className="movies-grid">
-        {error && <div className="error">Error: {error.message}</div>}
-
-        {loading ? (
-          <div className="loading">Loading...</div>
-        ) : (
-          movies.map(
+      {error && <div className="error">Error: {error.message}</div>}
+      {loading ? (
+        <div className="loading">Loading...</div>
+      ) : (
+        <div className="movies-grid">
+          {movies.map(
             (movie) =>
               movie.title.toLowerCase().includes(searchQuery.toLowerCase()) && (
                 <MovieCard key={movie.id} movie={movie} />
               ),
-          )
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
